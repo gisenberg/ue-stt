@@ -1,0 +1,31 @@
+{
+  "name": "ue-stt",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local Whisper microphone transcription app",
+  "main": "src/main/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:web\" \"wait-on http://127.0.0.1:5185 && ELECTRON_START_URL=http://127.0.0.1:5185 electron .\"",
+    "dev:web": "vite --host 127.0.0.1 --port 5185 --strictPort",
+    "start": "electron .",
+    "setup:homelab": "bash /Users/gisenberg/git/gisenberg/homelab-cli/scripts/setup_venv.sh",
+    "build": "vite build",
+    "test:web": "playwright test",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "agent-browser": "^0.28.0",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.1",
+    "vite": "^6.0.3",
+    "wait-on": "^8.0.1"
+  }
+}
