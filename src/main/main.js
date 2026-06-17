@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { compactMarkdownForRefinement } from './refinementInput.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '../..');
@@ -315,7 +316,8 @@ ipcMain.handle('recordings:refineWithCodex', async (_event, id, prompt) => {
   }
 
   const sourceMarkdown = await fs.readFile(path.join(recordingsDir(), item.markdownFile), 'utf8');
-  const refinedMarkdown = await runCodexRefinement(sourceMarkdown, prompt || defaultRefinementPrompt);
+  const refinementMarkdown = compactMarkdownForRefinement(sourceMarkdown);
+  const refinedMarkdown = await runCodexRefinement(refinementMarkdown, prompt || defaultRefinementPrompt);
   const refined = await saveRefinedRecording(item, refinedMarkdown);
   return refined;
 });

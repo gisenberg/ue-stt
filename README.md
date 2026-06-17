@@ -90,6 +90,8 @@ Manual transcription uses the same Homelab command against the saved recording f
 
 The refinement panel sends the selected markdown transcript and the current refinement prompt to Codex CLI. Refined output is saved next to the source markdown with a `_REFINED.md` suffix.
 
+Before sending the transcript to Codex, the app compacts generated markdown by preserving the title, metadata, and `## Transcript` body while omitting duplicated timestamped `## Segments` content.
+
 The default prompt is tuned for Unreal Engine experts and prioritizes details that are new, novel, or especially relevant to Unreal Engine 5.8.
 
 ## Local Data
