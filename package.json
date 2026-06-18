@@ -10,6 +10,8 @@
     "dev:web": "vite --host 127.0.0.1 --port 5185 --strictPort",
     "start": "electron .",
     "setup:homelab": "bash /Users/gisenberg/git/gisenberg/homelab-cli/scripts/setup_venv.sh",
+    "setup:pyannote": ".venv/bin/python scripts/download_pyannote_mlx.py",
+    "setup:diarization": "bash scripts/setup_speech_swift.sh",
     "build": "vite build",
     "test:web": "playwright test",
     "preview": "vite preview --host 127.0.0.1"
@@ -18,7 +20,8 @@
     "@vitejs/plugin-react": "^5.0.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.0",

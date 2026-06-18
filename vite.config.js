@@ -6,7 +6,10 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 5185,
-    strictPort: true
+    strictPort: true,
+    watch: {
+      ignored: ['**/vendor/**', '**/models/**', '**/.venv/**']
+    }
   },
   build: {
     target: 'es2022'

@@ -7,7 +7,8 @@ const SAMPLE_RECORDING = {
   audioFile: 'sample-recording.webm',
   markdownFile: 'sample-recording.md',
   text: 'This is a browser-mode sample transcript for UI verification.',
-  transcribed: true
+  transcribed: true,
+  refinements: []
 };
 
 const SAMPLE_MARKDOWN = `# Sample microphone note
@@ -23,6 +24,11 @@ This is a browser-mode sample transcript for UI verification.
 
 const STORAGE_KEY = 'ue-stt-browser-recordings';
 const PROMPT_KEY = 'ue-stt-refinement-prompt';
+const SPEECH_BACKEND_KEY = 'ue-stt-speech-backend';
+const BROWSER_BACKENDS = [
+  { id: 'homelab', label: 'Homelab CLI', model: 'homelab stt large-v3' },
+  { id: 'local', label: 'Local Whisper', model: 'mlx whisper large-v3' }
+];
 
 export const recordingsApi = window.recordings || createBrowserRecordingsApi();
 export const whisperEngineApi = window.whisperEngine || createBrowserWhisperEngineApi();
@@ -45,7 +51,8 @@ function createBrowserRecordingsApi() {
         audioFile: `${id}.webm`,
         markdownFile: `${id}.md`,
         text: '',
-        transcribed: false
+        transcribed: false,
+        refinements: []
       };
       const next = [recording, ...readBrowserRecordings()];
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -64,7 +71,8 @@ function createBrowserRecordingsApi() {
         audioFile: `${id}.webm`,
         markdownFile: `${id}.md`,
         text: 'Browser test recording transcript.',
-        transcribed: true
+        transcribed: true,
+        refinements: []
       };
       const next = [recording, ...readBrowserRecordings()];
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -77,11 +85,11 @@ function createBrowserRecordingsApi() {
         recording.id === id
           ? {
               ...recording,
-              title: recording.title === 'Browser audio recording' ? 'Browser test recording' : recording.title,
-              model: 'browser-test-double',
+              model: selectedBrowserBackend().model,
               mp3File: recording.audioFile.replace(/\.webm$/i, '.mp3'),
               text: 'Browser test recording transcript.',
-              transcribed: true
+              transcribed: true,
+              refinements: recording.refinements || []
             }
           : recording
       );
@@ -100,7 +108,17 @@ function createBrowserRecordingsApi() {
         segments: []
       };
     },
-    async readMarkdown(id) {
+    async readMarkdown(id, options = {}) {
+      if (options.view === 'refined') {
+        const source = readBrowserRecordings().find((recording) => recording.id === id);
+        const refinement =
+          source?.refinements?.find((candidate) => candidate.id === options.refinementId) ||
+          source?.refinements?.[0];
+        if (refinement) {
+          return window.localStorage.getItem(markdownKey(refinement.id)) || '';
+        }
+      }
+
       return window.localStorage.getItem(markdownKey(id)) || SAMPLE_MARKDOWN;
     },
     async readAudio() {
@@ -110,6 +128,19 @@ function createBrowserRecordingsApi() {
         mimeType: 'audio/webm',
         fileName: 'browser-recording.webm'
       };
+    },
+    async openWithCode() {
+      return true;
+    },
+    async copyPath(id, options = {}) {
+      const source = readBrowserRecordings().find((recording) => recording.id === id);
+      if (options.view === 'refined') {
+        const refinement =
+          source?.refinements?.find((candidate) => candidate.id === options.refinementId) ||
+          source?.refinements?.[0];
+        return `/browser-recordings/${refinement?.markdownFile || 'refined.md'}`;
+      }
+      return `/browser-recordings/${source?.markdownFile || 'transcript.md'}`;
     },
     async renameMarkdown(id, name) {
       const recordings = readBrowserRecordings();
@@ -134,11 +165,11 @@ function createBrowserRecordingsApi() {
       const recordings = readBrowserRecordings();
       const source = recordings.find((recording) => recording.id === id) || SAMPLE_RECORDING;
       const refined = {
-        ...source,
         id: `${id}-refined`,
         title: `${source.title} REFINED`,
         markdownFile: source.markdownFile.replace(/\.md$/i, '_REFINED.md'),
-        refined: true
+        createdAt: new Date().toISOString(),
+        prompt
       };
       const refinedMarkdown = `# ${refined.title}
 
@@ -151,10 +182,33 @@ function createBrowserRecordingsApi() {
 
 - Verify claims against source material before publishing.
 `;
-      const next = [refined, ...recordings.filter((recording) => recording.id !== refined.id)];
+      const updatedSource = {
+        ...source,
+        refinements: [refined, ...(source.refinements || [])],
+        activeRefinementId: refined.id
+      };
+      const next = recordings.map((recording) => (recording.id === id ? updatedSource : recording));
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       window.localStorage.setItem(markdownKey(refined.id), refinedMarkdown);
-      return refined;
+      return updatedSource;
+    },
+    async updateRefinementPrompt(id, refinementId, prompt) {
+      const recordings = readBrowserRecordings();
+      const updated = recordings.map((recording) =>
+        recording.id === id
+          ? {
+              ...recording,
+              refinements: (recording.refinements || []).map((refinement) =>
+                refinement.id === refinementId ? { ...refinement, prompt } : refinement
+              )
+            }
+          : recording
+      );
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated.find((recording) => recording.id === id);
+    },
+    onTranscriptionProgress() {
+      return () => {};
     },
     async reveal() {
       return true;
@@ -165,10 +219,24 @@ function createBrowserRecordingsApi() {
 function createBrowserWhisperEngineApi() {
   return {
     async status() {
+      const backend = selectedBrowserBackend();
       return {
         state: 'ready',
-        message: 'Browser test Homelab STT ready',
-        model: 'homelab stt large-v3'
+        message: `Browser test ${backend.label} ready`,
+        model: backend.model,
+        selectedBackend: backend.id,
+        backends: BROWSER_BACKENDS
+      };
+    },
+    async setBackend(backendId) {
+      const backend = BROWSER_BACKENDS.find((candidate) => candidate.id === backendId) || BROWSER_BACKENDS[0];
+      window.localStorage.setItem(SPEECH_BACKEND_KEY, backend.id);
+      return {
+        state: 'ready',
+        message: `Browser test ${backend.label} ready`,
+        model: backend.model,
+        selectedBackend: backend.id,
+        backends: BROWSER_BACKENDS
       };
     }
   };
@@ -219,6 +287,11 @@ ${recording.text}
 
 function markdownKey(id) {
   return `ue-stt-browser-markdown:${id}`;
+}
+
+function selectedBrowserBackend() {
+  const selected = window.localStorage.getItem(SPEECH_BACKEND_KEY);
+  return BROWSER_BACKENDS.find((backend) => backend.id === selected) || BROWSER_BACKENDS[0];
 }
 
 function formatDuration(ms = 0) {

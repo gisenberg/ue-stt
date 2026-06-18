@@ -8,12 +8,14 @@ export function compactMarkdownForRefinement(markdown) {
 
   const lines = normalized.split('\n');
   const sections = splitMarkdownSections(lines);
-  const transcriptSection = sections.find((section) => isHeading(section.heading, 'transcript'));
+  const transcriptSection =
+    sections.find((section) => isHeading(section.heading, 'annotated transcript')) ||
+    sections.find((section) => isHeading(section.heading, 'transcript'));
 
   if (transcriptSection) {
     const intro = lines.slice(0, transcriptSection.start).join('\n').trim();
     const transcript = sectionText(lines, transcriptSection).trim();
-    return cleanMarkdown([intro, '## Transcript', transcript].filter(Boolean).join('\n\n'));
+    return cleanMarkdown([intro, `## ${transcriptSection.heading}`, transcript].filter(Boolean).join('\n\n'));
   }
 
   const keptSections = sections.filter((section) => !duplicateSectionHeadings.has(section.heading.toLowerCase()));

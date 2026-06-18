@@ -165,16 +165,14 @@ button {
   display: flex;
   width: 100%;
   min-height: 68px;
-  flex-direction: column;
-  justify-content: center;
-  gap: 7px;
-  padding: 11px 12px;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 6px 7px 12px;
   text-align: left;
   color: var(--text);
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
-  cursor: pointer;
 }
 
 .recordingItem:hover {
@@ -185,6 +183,32 @@ button {
   border-color: var(--border-strong);
   background: var(--surface-raised);
   box-shadow: 0 10px 22px var(--shadow);
+}
+
+.recordingSelect {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  min-height: 52px;
+  padding: 4px 0;
+  text-align: left;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.navRenameButton {
+  flex: 0 0 auto;
+  opacity: 0;
+}
+
+.recordingItem:hover .navRenameButton,
+.recordingItem.active .navRenameButton {
+  opacity: 1;
 }
 
 .recordingTitle {
@@ -203,6 +227,28 @@ button {
   font-size: 12px;
 }
 
+.navRenameForm {
+  display: flex;
+  min-width: 0;
+  width: 100%;
+  align-items: center;
+  gap: 6px;
+}
+
+.navRenameForm input {
+  min-width: 0;
+  flex: 1;
+  height: 34px;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  padding: 0 9px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
 .emptyState {
   display: flex;
   align-items: center;
@@ -215,8 +261,10 @@ button {
 
 .workspace {
   display: flex;
+  min-height: 0;
   min-width: 0;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .toolbar {
@@ -253,6 +301,59 @@ button {
 
 .statusCluster .errorText {
   color: var(--danger);
+}
+
+.transcriptionProgress {
+  width: min(420px, 42vw);
+  margin-top: 8px;
+}
+
+.statusCluster .progressMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+
+.statusCluster .progressMeta span {
+  display: block;
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.progressTrack {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-soft);
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  margin: 0;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 0.18s ease;
+}
+
+.progressTrack.indeterminate span {
+  position: absolute;
+  width: 34%;
+  animation: progressSlide 1.15s ease-in-out infinite;
+}
+
+@keyframes progressSlide {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
 }
 
 .statusDot {
@@ -345,20 +446,23 @@ button {
 }
 
 .content {
-  display: grid;
-  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
-  gap: 20px;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 16px;
   min-height: 0;
+  overflow: hidden;
   padding: 20px;
 }
 
 .recordPanel {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(200px, 280px) minmax(220px, 300px) minmax(360px, 1fr);
+  align-items: center;
+  flex: 0 0 auto;
   min-width: 0;
-  min-height: 0;
-  flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  gap: 16px;
+  padding: 16px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -429,11 +533,33 @@ button {
   font-weight: 700;
 }
 
+.recordSettings {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .modelInfo span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.modelInfo select {
+  min-width: 0;
+  width: 100%;
+  color: var(--accent);
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+  outline: none;
+}
+
+.modelInfo select:disabled {
+  opacity: 0.65;
 }
 
 .toggleRow {
@@ -453,13 +579,90 @@ button {
 
 .audioPanel {
   display: flex;
-  min-height: 154px;
+  min-height: 130px;
   flex-direction: column;
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface-raised);
+}
+
+.recordingOverlay {
+  display: flex;
+  min-height: 130px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(227, 99, 88, 0.48);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(227, 99, 88, 0.12), rgba(85, 185, 139, 0.08)),
+    var(--surface-raised);
+}
+
+.recordingOverlayHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.recordingMic {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #fff6f4;
+  border-radius: 999px;
+  background: var(--danger-strong);
+  box-shadow: 0 0 0 7px rgba(227, 99, 88, 0.12);
+}
+
+.recordingOverlayHeader p {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.recordingOverlayHeader span {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.recordingNameField {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.recordingNameField span {
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.recordingNameField input {
+  min-width: 0;
+  height: 34px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(15, 17, 16, 0.36);
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.recordingNameField input:focus {
+  border-color: var(--accent);
 }
 
 .audioPanelHeader {
@@ -482,6 +685,25 @@ button {
   gap: 2px;
   height: 58px;
   padding: 6px 0;
+}
+
+.liveWaveform {
+  display: block;
+  width: 100%;
+  height: 42px;
+  overflow: visible;
+}
+
+.liveWaveformCenter {
+  stroke: color-mix(in srgb, var(--danger) 26%, transparent);
+  stroke-width: 1;
+}
+
+.liveWaveformSample {
+  stroke: var(--danger);
+  stroke-linecap: round;
+  stroke-width: 0.72;
+  vector-effect: non-scaling-stroke;
 }
 
 .waveform span {
@@ -512,24 +734,49 @@ button {
   accent-color: var(--accent);
 }
 
-.promptPanel {
+.inlinePromptPanel {
   display: flex;
-  min-height: 0;
-  flex: 1;
+  flex: 0 0 auto;
   flex-direction: column;
-  gap: 9px;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
 }
 
-.promptPanel > span {
+.promptToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 28px;
+  padding: 0;
   color: var(--text-muted);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
-.promptPanel textarea {
-  min-height: 150px;
-  flex: 1;
+.promptToggle:hover {
+  color: var(--text);
+}
+
+.promptToggle svg {
+  transition: transform 0.16s ease;
+}
+
+.inlinePromptPanel.expanded .promptToggle svg {
+  transform: rotate(180deg);
+}
+
+.inlinePromptPanel textarea {
+  min-height: 92px;
+  max-height: 180px;
+  flex: 0 0 auto;
   resize: none;
   overflow: auto;
   color: var(--text);
@@ -543,22 +790,80 @@ button {
   outline: none;
 }
 
-.promptPanel textarea:focus {
+.inlinePromptPanel textarea:focus {
   border-color: var(--accent);
 }
 
 .markdownPane {
   display: flex;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
   flex-direction: column;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
 }
 
+.viewTabs {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.viewTabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 13px;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  border-bottom-color: transparent;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.viewTabs button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface-raised);
+}
+
+.viewTabs button.active {
+  color: var(--text);
+  border-color: var(--border);
+  border-bottom-color: var(--surface);
+  background: var(--surface);
+}
+
+.viewTabs button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.viewTabs button span {
+  display: grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  color: #07100c;
+  border-radius: 999px;
+  background: var(--accent);
+  font-size: 11px;
+  line-height: 1;
+}
+
 .paneHeader {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 8px;
   min-height: 46px;
@@ -603,18 +908,97 @@ button {
   border-color: var(--accent);
 }
 
-.markdownPane pre {
+.markdownBody {
   min-height: 0;
   flex: 1;
   margin: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
   padding: 22px;
   color: var(--text);
+  word-break: break-word;
+}
+
+.rawMarkdown {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 14px;
   line-height: 1.65;
   white-space: pre-wrap;
-  word-break: break-word;
+}
+
+.markdownPreview {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.markdownPreview > :first-child {
+  margin-top: 0;
+}
+
+.markdownPreview > :last-child {
+  margin-bottom: 0;
+}
+
+.markdownPreview h1,
+.markdownPreview h2,
+.markdownPreview h3 {
+  margin: 1.35em 0 0.55em;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.markdownPreview h1 {
+  font-size: 24px;
+}
+
+.markdownPreview h2 {
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+  font-size: 18px;
+}
+
+.markdownPreview h3 {
+  font-size: 15px;
+}
+
+.markdownPreview p,
+.markdownPreview ul,
+.markdownPreview ol {
+  margin: 0.65em 0;
+}
+
+.markdownPreview ul,
+.markdownPreview ol {
+  padding-left: 24px;
+}
+
+.markdownPreview li {
+  margin: 0.3em 0;
+}
+
+.markdownPreview code {
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  padding: 1px 5px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.92em;
+}
+
+.markdownPreview pre {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+  padding: 12px;
+}
+
+.markdownPreview pre code {
+  border: 0;
+  background: transparent;
+  padding: 0;
 }
 
 @media (max-width: 1050px) {
@@ -622,8 +1006,8 @@ button {
     grid-template-columns: 272px 1fr;
   }
 
-  .content {
+  .recordPanel {
     grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
   }
 }
